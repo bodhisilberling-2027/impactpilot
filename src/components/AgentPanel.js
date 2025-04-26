@@ -34,7 +34,9 @@ export default function AgentPanel({ id, api, input, output, loading, duration, 
         <div className="mt-6">
           <div className="flex justify-between items-center mb-2">
             <div className="text-sm text-gray-400">Output:</div>
-            {duration && <div className="text-sm text-gray-400">⚡ {duration} ms</div>}
+            {duration ? (
+              <div className="text-sm text-gray-400">⚡ {duration} ms</div>
+              ) : null}
           </div>
           <pre className="text-green-400 bg-black p-4 rounded-lg overflow-auto whitespace-pre-wrap text-sm border border-gray-700">
             {output}
