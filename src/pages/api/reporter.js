@@ -8,8 +8,6 @@ import { runAgent } from '../../lib/agent-engine';
 
 export default async function handler(req, res) {
   const { req_type, report } = JSON.parse(req.body);
-  console.log(req.body);
-  console.log(report);
 
   const instruction = `Evaluate this draft and suggest improvements for clarity, structure, metrics, tone, and persuasiveness:\n\n${report}`;
 
@@ -21,6 +19,6 @@ export default async function handler(req, res) {
     max_tokens: 512,
   });
 
-  res.status(200).json({ report : response.content });
-  console.log(response.content)
+  res.status(200).json({ response : response.content });
+  const { res_type, text } = response.content[0];
 }

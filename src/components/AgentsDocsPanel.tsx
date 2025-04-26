@@ -48,6 +48,7 @@ export default function AgentDocsPanel() {
       body: JSON.stringify( input )
     });
     const data = await res.json();
+    console.log(data)
     const output = typeof data.response === 'string' ? data.response : JSON.stringify(data.response, null, 2);
 
     setResponses(prev => ({ ...prev, [agent]: output }));
