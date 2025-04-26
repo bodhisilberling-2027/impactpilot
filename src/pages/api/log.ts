@@ -9,8 +9,16 @@ const supabase = createClient(
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { agent, input, output } = req.body;
+  console.log(req.body);
+  const { agent, input: inputJson, output } = req.body;
 
+  let input;
+  try {
+    input = JSON.parse(inputJson);
+  } catch (err) {
+    return res.status(400).json({ error: 'Invalid JSON in input' });
+  }
+  
   const { error } = await supabase.from('agent_logs').insert([
     { agent, input, output }
   ]);
