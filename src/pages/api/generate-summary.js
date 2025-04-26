@@ -2,7 +2,7 @@ import { OpenAI } from 'openai';
 import { runAgent } from '../../lib/agent-engine';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.API_KEY
 });
 
 export default async function handler(req, res) {
