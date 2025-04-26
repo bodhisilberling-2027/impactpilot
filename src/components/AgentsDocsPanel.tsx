@@ -42,13 +42,16 @@ export default function AgentDocsPanel() {
 
   const handleTest = async (agent: string) => {
     const input = inputs[agent] || '';
-    const res = await fetch(`/api/${agent}`, {
+    // const { type, [agent]: user_input } = JSON.parse(input);
+    // input = JSON.stringify({ "type": type, "input": user_input });
+    
+    const res = await fetch(`/api/agent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify( input )
     });
     const data = await res.json();
-    console.log(data)
+    // console.log(data)
     const output = typeof data.response === 'string' ? data.response : JSON.stringify(data.response, null, 2);
 
     setResponses(prev => ({ ...prev, [agent]: output }));
