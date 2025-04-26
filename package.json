@@ -19,17 +19,18 @@
     "csv-parse": "^5.6.0",
     "dotenv": "^16.5.0",
     "formidable": "^3.5.2",
-    "jspdf": "^3.0.1",
-    "next": "15.3.0",
-    "openai": "^4.95.0",
-    "papaparse": "^5.5.2",
+    "jspdf": "^2.5.1",
+    "next": "14.1.0",
+    "papaparse": "^5.4.1",
     "pdf-parse": "^1.1.1",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-dropzone": "^14.3.8",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-dropzone": "^14.2.3",
     "recharts": "^2.15.2",
     "resend": "^4.3.0",
-    "socket.io-client": "^4.8.1"
+    "socket.io": "^4.7.4",
+    "socket.io-client": "^4.7.4",
+    "html2canvas": "^1.4.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -37,6 +38,8 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "eslint": "^8",
+    "eslint-config-next": "14.1.0"
   }
 }

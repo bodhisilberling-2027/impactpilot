@@ -1,21 +1,18 @@
-import { runAgent } from '../../lib/agent-engine';
-
-import { OpenAI } from 'openai';
-
-const openai = new OpenAI({ apiKey: process.env.API_KEY });
+import { callClaude } from '../../utils/claude';
 
 export default async function handler(req, res) {
-  const { task } = req.body;
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-  const system = `You are a workflow optimization agent. Given a task, return a numbered list of steps to automate or streamline it.`;
-
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
-    messages: [
-      { role: 'system', content: system },
-      { role: 'user', content: task }
-    ]
-  });
-
-  res.status(200).json({ plan: completion.choices[0].message.content });
+  try {
+    const { task } = req.body;
+    const systemPrompt = 'You are a workflow automation expert. Analyze tasks and suggest efficient workflows, automation opportunities, and process improvements.';
+    
+    const response = await callClaude(task, systemPrompt);
+    res.status(200).json({ workflow: response });
+  } catch (error) {
+    console.error('Error processing workflow:', error);
+    res.status(500).json({ error: 'Failed to process workflow' });
+  }
 }

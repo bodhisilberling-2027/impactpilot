@@ -1,17 +1,18 @@
-import { runAgent } from '../../lib/agent-engine';
+import { callClaude } from '../../utils/claude';
 
 export default async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  
-    const { input } = req.body;
-  
-    const outline = [
-      "1. Executive Summary",
-      "2. Problem Statement",
-      "3. Solution Overview",
-      "4. Key Metrics",
-      "5. Call to Action"
-    ].join('\n');
-  
-    res.status(200).json({ outline });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  try {
+    const { input } = req.body;
+    const systemPrompt = 'You are a presentation expert. Create a detailed slide deck outline with clear sections, key points, and suggested visuals based on the input.';
+    
+    const response = await callClaude(input, systemPrompt);
+    res.status(200).json({ outline: response });
+  } catch (error) {
+    console.error('Error generating slide outline:', error);
+    res.status(500).json({ error: 'Failed to generate slide outline' });
+  }
+}

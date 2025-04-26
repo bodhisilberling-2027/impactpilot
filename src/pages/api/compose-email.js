@@ -1,24 +1,18 @@
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.API_KEY,
-});
-
-import { runAgent } from '../../lib/agent-engine';
+import { callClaude } from '../../utils/claude';
 
 export default async function handler(req, res) {
-  const { prompt, tone, recipient } = req.body;
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-  const instruction = `Write a ${tone} email to a ${recipient} based on the following context: "${prompt}". Make it clear, concise, and appropriate for that audience.`;
-
-  const response = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-latest',
-    messages: [
-      { role: 'system', content: 'You are an expert nonprofit communication assistant.' },
-      { role: 'user', content: instruction },
-    ],
-    max_tokens: 512,
-  });
-
-  res.status(200).json({ email: response.content });
+  try {
+    const { prompt } = req.body;
+    const systemPrompt = 'You are an email composition assistant. Create professional, engaging emails based on the given context.';
+    
+    const response = await callClaude(prompt, systemPrompt);
+    res.status(200).json({ response });
+  } catch (error) {
+    console.error('Error composing email:', error);
+    res.status(500).json({ error: 'Failed to compose email' });
+  }
 }
