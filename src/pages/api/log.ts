@@ -9,7 +9,6 @@ const supabase = createClient(
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  console.log(req.body);
   const { agent, input: inputJson, output } = req.body;
 
   let input;

@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import Anthropic from '@anthropic-ai/sdk';
-import { prompts } from 'prompts';
+import { prompts } from './prompt';
+import { json } from 'stream/consumers';
 
 const anthropic = new Anthropic({
   apiKey: process.env.API_KEY,
@@ -11,10 +12,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Only POST method allowed' });
   }
 
-  const { agent, input } = JSON.parse(req.body);
+  const body = JSON.parse(req.body);
+  const { type: agent } = body;
+  const input = body[agent];
   
+  let prompt;
   try {
-    const prompt = prompts[agent];
+    prompt = prompts[agent];
   } catch (err: any) {
     res.status(500).json({ error: `Task '${agent}' does not exist: ${err.message}`});
   }
@@ -27,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ],
       max_tokens: 512,
     });
-    res.status(200).json({ response });
+    res.status(200).json({ response: response.content });
   } catch (err: any) {
     res.status(500).json({ error: `Task '${agent}' failed: ${err.message}` });
   }
