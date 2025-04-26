@@ -1,18 +1,24 @@
-import { callClaude } from '../../utils/claude';
+import Anthropic from '@anthropic-ai/sdk';
+
+const anthropic = new Anthropic({
+  apiKey: process.env.API_KEY,
+});
+
+import { runAgent } from '../../lib/agent-engine';
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  const { type, report } = req.body;
 
-  try {
-    const { report } = req.body;
-    const systemPrompt = 'You are an evaluation expert. Analyze reports and provide detailed feedback on content, structure, and recommendations for improvement.';
-    
-    const response = await callClaude(report, systemPrompt);
-    res.status(200).json({ evaluation: response });
-  } catch (error) {
-    console.error('Error evaluating report:', error);
-    res.status(500).json({ error: 'Failed to evaluate report' });
-  }
+  const instruction = `Evaluate this draft and suggest improvements for clarity, structure, metrics, tone, and persuasiveness:\n\n${report}`;
+
+  const response = await anthropic.messages.create({
+    model: 'claude-3-5-sonnet-latest',
+    messages: [
+      { role: 'system', content: 'You are an expert nonprofit communication assistant.' },
+      { role: 'user', content: instruction },
+    ],
+    max_tokens: 512,
+  });
+
+  res.status(200).json({ report : response.content });
 }
