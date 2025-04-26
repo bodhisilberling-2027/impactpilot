@@ -4,8 +4,27 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
-export async function saveFlow(name: string, steps: any[], notes: Record<string, any> = {}) {
-  const { error } = await supabase.from('agent_flows').insert({ name, steps, notes });
+
+interface AgentConfig {
+  temperature?: number;
+  maxTokens?: number;
+  systemPrompt?: string;
+  model?: string;
+}
+
+export async function saveFlow(
+  name: string, 
+  steps: string[], 
+  notes: Record<string, string> = {},
+  configs: Record<string, AgentConfig> = {}
+) {
+  const { error } = await supabase.from('agent_flows').insert({ 
+    name, 
+    steps, 
+    notes,
+    configs,
+    created_at: new Date().toISOString()
+  });
   if (error) throw new Error(error.message);
 }
 

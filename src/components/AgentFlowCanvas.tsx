@@ -5,12 +5,21 @@ import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import AgentConfigPopup from './AgentConfigPopup';
+
+interface AgentConfig {
+  temperature?: number;
+  maxTokens?: number;
+  systemPrompt?: string;
+  model?: string;
+}
 
 interface FlowRecord {
   id: string;
   name: string;
   steps: string[];
   notes: Record<string, string>;
+  configs?: Record<string, AgentConfig>;
   createdAt?: string;
   forkedFrom?: string;
   version?: number;
@@ -55,6 +64,9 @@ export default function AgentFlowCanvas() {
   const [saved, setSaved] = useState<FlowRecord[]>([]);
   const [name, setName] = useState('');
   const [memoryEnabled, setMemoryEnabled] = useState(true);
+  const [configPopupOpen, setConfigPopupOpen] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<string>('');
+  const [agentConfigs, setAgentConfigs] = useState<Record<string, AgentConfig>>({});
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -72,7 +84,11 @@ export default function AgentFlowCanvas() {
       const res = await fetch(`/api/${agent}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input: value, memory: memoryEnabled ? noteMap : {} })
+        body: JSON.stringify({ 
+          input: value, 
+          memory: memoryEnabled ? noteMap : {},
+          config: agentConfigs[agent] || {} 
+        })
       });
       const data = await res.json();
       value = typeof data.response === 'string' ? data.response : JSON.stringify(data.response);
@@ -83,7 +99,8 @@ export default function AgentFlowCanvas() {
   };
 
   const handleSave = async () => {
-await saveFlow(name, flow, noteMap);    const updated = await loadFlows();
+    await saveFlow(name, flow, noteMap, agentConfigs);
+    const updated = await loadFlows();
     setSaved(updated);
     setName('');
   };
@@ -125,6 +142,18 @@ await saveFlow(name, flow, noteMap);    const updated = await loadFlows();
     setNoteMap(prev => ({ ...prev, [id]: val }));
   };
 
+  const openConfig = (agent: string) => {
+    setSelectedAgent(agent);
+    setConfigPopupOpen(true);
+  };
+
+  const handleConfigSave = (config: AgentConfig) => {
+    setAgentConfigs(prev => ({
+      ...prev,
+      [selectedAgent]: config
+    }));
+  };
+
   return (
     <div className="p-6 min-h-screen bg-black text-white">
       <h1 className="text-2xl font-bold text-indigo-400 mb-4">🧱 Visual Flow Builder</h1>
@@ -151,14 +180,23 @@ await saveFlow(name, flow, noteMap);    const updated = await loadFlows();
           <div className="flex gap-3 flex-wrap">
             {flow.map((step, i) => (
               <div key={step + i} className="w-full">
-                <SortableItem
-                  id={step + i}
-                  step={step}
-                  index={i}
-                  note={noteMap[step]}
-                  onNoteChange={updateNote}
-                  onRemove={(idx) => setFlow(prev => prev.filter((_, j) => j !== idx))}
-                />
+                <div className="flex items-start gap-2">
+                  <SortableItem
+                    id={step + i}
+                    step={step}
+                    index={i}
+                    note={noteMap[step]}
+                    onNoteChange={updateNote}
+                    onRemove={(idx) => setFlow(prev => prev.filter((_, j) => j !== idx))}
+                  />
+                  <button
+                    onClick={() => openConfig(step)}
+                    className="px-2 py-1 bg-indigo-800 rounded text-xs hover:bg-indigo-700"
+                    title="Configure agent"
+                  >
+                    ⚙️
+                  </button>
+                </div>
                 {stepOutputs[step] && (
                   <pre className="bg-[#111] text-green-400 text-xs border border-gray-700 rounded p-2 mt-1 whitespace-pre-wrap">
                     {stepOutputs[step]}
@@ -201,6 +239,14 @@ await saveFlow(name, flow, noteMap);    const updated = await loadFlows();
           {output}
         </pre>
       )}
+
+      <AgentConfigPopup
+        isOpen={configPopupOpen}
+        onClose={() => setConfigPopupOpen(false)}
+        agentName={selectedAgent}
+        config={agentConfigs[selectedAgent] || {}}
+        onSave={handleConfigSave}
+      />
     </div>
   );
 }
