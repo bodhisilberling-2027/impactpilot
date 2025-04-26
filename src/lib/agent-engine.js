@@ -18,9 +18,9 @@ export const agentTemplates = {
     }
   }),
 
-  summary: (text) => ({
+  summary: (input) => ({
     type: 'summary',
-    text: `Summary: ${text.slice(0, 80)}...`
+    text: `Summary: ${input.slice(0, 80)}...`
   }),
 
   checklist: (task) => ({
@@ -90,10 +90,10 @@ export const agentTemplates = {
     draft: `📨 Outreach Email:\nHi, I'm reaching out about "${input.slice(0, 60)}...". Let’s connect.`
   }),
 
-  openai: async (input) => {
-    await delay(1200);
-    return { type: 'ai', response: `🤖 AI simulation of: "${input.slice(0, 60)}..."` };
-  },
+  // openai: async (input) => {
+  //   await delay(1200);
+  //   return { type: 'ai', response: `🤖 AI simulation of: "${input.slice(0, 60)}..."` };
+  // },
 
   reporter: (input) => ({
     type: 'report',
