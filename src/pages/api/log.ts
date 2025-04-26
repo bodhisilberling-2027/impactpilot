@@ -19,11 +19,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Invalid JSON in input' });
   }
   
-  const { error } = await supabase.from('agent_logs').insert([
-    { agent, input, output }
-  ]);
+  // const { error } = await supabase.from('agent_logs').insert([
+  //   { agent, input, output }
+  // ]);
 
-  if (error) return res.status(500).json({ error: error.message });
+  // if (error) return res.status(500).json({ error: error.message });
 
   res.status(200).json({ success: true });
 }
