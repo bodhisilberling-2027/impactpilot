@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.40.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -19,8 +20,9 @@
     "csv-parse": "^5.6.0",
     "dotenv": "^16.5.0",
     "formidable": "^3.5.2",
+    "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
-    "next": "14.1.0",
+    "next": "^15.3.1",
     "papaparse": "^5.4.1",
     "pdf-parse": "^1.1.1",
     "react": "^18",
@@ -29,17 +31,16 @@
     "recharts": "^2.15.2",
     "resend": "^4.3.0",
     "socket.io": "^4.7.4",
-    "socket.io-client": "^4.7.4",
-    "html2canvas": "^1.4.1"
+    "socket.io-client": "^4.7.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "tailwindcss": "^4",
-    "typescript": "^5",
     "eslint": "^8",
-    "eslint-config-next": "14.1.0"
+    "eslint-config-next": "14.1.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
