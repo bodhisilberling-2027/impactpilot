@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import groupedAgents from './groupedAgents.config';
@@ -8,6 +9,7 @@ import AgentPanel from './AgentPanel';
 import { io } from 'socket.io-client';
 import { useDropzone } from 'react-dropzone';
 import { parse } from 'papaparse';
+import VolunteerSignup from './VolunteerSignup';
 
 export default function AnalyticsDashboard() {
   const socket = useRef(null);
@@ -22,7 +24,6 @@ export default function AnalyticsDashboard() {
   const [tab, setTab] = useState('dashboard');
   const [loading, setLoading] = useState({});
   const [search, setSearch] = useState('');
-  const [collabUsers, setCollabUsers] = useState(['You', 'Alex', 'Taylor']);
   const [theme, setTheme] = useState('dark');
   const [agentUsage, setAgentUsage] = useState({});
   const [notes, setNotes] = useState({});
@@ -37,6 +38,7 @@ export default function AnalyticsDashboard() {
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
   const [summaries, setSummaries] = useState({});
+  const [showVolunteerSignup, setShowVolunteerSignup] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('impactpilot-inputs', JSON.stringify(inputs));
@@ -164,16 +166,12 @@ export default function AnalyticsDashboard() {
       <h1 className="text-3xl font-bold text-indigo-400 mb-4">ImpactPilot</h1>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <div className="flex gap-2">
-          <button onClick={() => exportHistory('json')} className="bg-gray-800 text-white text-xs px-3 py-1 rounded">📤 Export JSON</button>
-          <button onClick={() => exportHistory('csv')} className="bg-gray-800 text-white text-xs px-3 py-1 rounded">📊 Export CSV</button>
-        </div>
-        <button onClick={saveWorkspace} className="bg-blue-600 px-4 py-1.5 rounded text-sm">💾 Save</button>
-        <label className="bg-green-600 px-4 py-1.5 rounded text-sm cursor-pointer">
-          📂 Load
-          <input type="file" onChange={loadWorkspace} className="hidden" />
-        </label>
-        <button onClick={exportPDF} className="bg-purple-600 px-4 py-1.5 rounded text-sm">📄 Export</button>
+        <button 
+          onClick={() => setShowVolunteerSignup(true)}
+          className="bg-green-600 px-4 py-1.5 rounded text-sm text-white hover:bg-green-700"
+        >
+          ✋ Volunteer Sign Up
+        </button>
         <button onClick={toggleTheme} className="ml-auto bg-yellow-500 text-black text-sm px-3 py-1.5 rounded">🎨 Theme</button>
         <input
           className="px-3 py-1.5 rounded bg-[#1a1a1a] border border-gray-700 text-sm"
@@ -183,9 +181,7 @@ export default function AnalyticsDashboard() {
         />
       </div>
 
-      <div className="text-sm text-indigo-300 mb-4">
-        👥 Collaborators online: {collabUsers.join(', ')}
-      </div>
+      {showVolunteerSignup && <VolunteerSignup onClose={() => setShowVolunteerSignup(false)} />}
 
       <div className="mt-4 text-sm text-gray-400">📉 Most Used Agents: {Object.entries(agentUsage).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>`${k} (${v})`).join(', ')}</div>
 
@@ -203,7 +199,7 @@ export default function AnalyticsDashboard() {
                     onClick={() => setTab(agent.id)}
                     className={`px-3 py-1.5 rounded-full text-sm ${tab === agent.id ? 'bg-indigo-500 text-white' : 'bg-[#1f1f1f] text-gray-300 border border-gray-600 hover:bg-[#2a2a2a]'}`}
                   >
-                    {agent.id} ({agentUsage[agent.id] || 0})
+                    {agent.displayName}
                   </button>
                 ))}
               </div>
