@@ -8,13 +8,13 @@ import { runAgent } from '../../lib/agent-engine';
 
 export default async function handler(req, res) {
   const { type, report } = req.body;
+  console.log(req.body);
 
   const instruction = `Evaluate this draft and suggest improvements for clarity, structure, metrics, tone, and persuasiveness:\n\n${report}`;
 
   const response = await anthropic.messages.create({
     model: 'claude-3-5-sonnet-latest',
     messages: [
-      { role: 'system', content: 'You are an expert nonprofit communication assistant.' },
       { role: 'user', content: instruction },
     ],
     max_tokens: 512,
