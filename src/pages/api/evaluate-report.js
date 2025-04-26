@@ -1,21 +1,24 @@
+import Anthropic from '@anthropic-ai/sdk';
+
+const anthropic = new Anthropic({
+  apiKey: process.env.API_KEY,
+});
+
 import { runAgent } from '../../lib/agent-engine';
 
-import { OpenAI } from 'openai';
-
-const openai = new OpenAI({ apiKey: process.env.API_KEY });
-
 export default async function handler(req, res) {
-  const { draft } = req.body;
+  const { type, report } = req.body;
 
-  const prompt = `You are an expert in nonprofit impact reporting. Evaluate this draft and suggest improvements for clarity, structure, metrics, tone, and persuasiveness:\n\n${draft}`;
+  const instruction = `Evaluate this draft and suggest improvements for clarity, structure, metrics, tone, and persuasiveness:\n\n${report}`;
 
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
+  const response = await anthropic.messages.create({
+    model: 'claude-3-5-sonnet-latest',
     messages: [
-      { role: 'system', content: 'You help nonprofits write better impact reports.' },
-      { role: 'user', content: prompt }
-    ]
+      { role: 'system', content: 'You are an expert nonprofit communication assistant.' },
+      { role: 'user', content: instruction },
+    ],
+    max_tokens: 512,
   });
 
-  res.status(200).json({ feedback: completion.choices[0].message.content });
+  res.status(200).json({ report : response.content });
 }
