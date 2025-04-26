@@ -7,8 +7,9 @@ const anthropic = new Anthropic({
 import { runAgent } from '../../lib/agent-engine';
 
 export default async function handler(req, res) {
-  const { type, report } = req.body;
+  const { req_type, report } = JSON.parse(req.body);
   console.log(req.body);
+  console.log(report);
 
   const instruction = `Evaluate this draft and suggest improvements for clarity, structure, metrics, tone, and persuasiveness:\n\n${report}`;
 
@@ -21,4 +22,5 @@ export default async function handler(req, res) {
   });
 
   res.status(200).json({ report : response.content });
+  console.log(response.content)
 }

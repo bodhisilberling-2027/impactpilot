@@ -45,7 +45,7 @@ export default function AgentDocsPanel() {
     const res = await fetch(`/api/${agent}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ input })
+      body: JSON.stringify( input )
     });
     const data = await res.json();
     const output = typeof data.response === 'string' ? data.response : JSON.stringify(data.response, null, 2);
