@@ -10,6 +10,14 @@ interface AgentConfig {
   maxTokens?: number;
   systemPrompt?: string;
   model?: string;
+  // Agent-specific fields
+  tone?: string;
+  style?: string;
+  format?: string;
+  audience?: string;
+  length?: 'short' | 'medium' | 'long';
+  complexity?: 'simple' | 'moderate' | 'technical';
+  purpose?: string;
 }
 
 export async function saveFlow(
