@@ -58,11 +58,12 @@ export default function AnalyticsDashboard() {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ [inputKey]: inputs[field] })
+      body: JSON.stringify({ type: field , [field]: inputs[field] })
     });
     const data = await res.json();
     const timestamp = new Date().toLocaleString();
     setOutputs(prev => ({ ...prev, [field]: data[outputKey] }));
+    return;
     const nextAgent = agentChains[field];
     if (nextAgent) {
       setInputs(prev => ({ ...prev, [nextAgent]: data[outputKey] }));
@@ -233,7 +234,7 @@ export default function AnalyticsDashboard() {
         {tab && tab !== 'dashboard' && (
           <AgentPanel
             id={tab}
-            api={`/api/${tab}`}
+            api={`/api/agent`}
             input={inputs[tab] || ''}
             output={outputs[tab] || ''}
             loading={loading[tab]}

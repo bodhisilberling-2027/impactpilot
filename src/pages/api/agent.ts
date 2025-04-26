@@ -12,7 +12,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Only POST method allowed' });
   }
 
-  const body = JSON.parse(req.body);
+  let body;
+  if (typeof req.body === 'string') {
+    body = JSON.parse(req.body);
+  } else {
+    body = req.body;
+  }
   const { type: agent } = body;
   const input = body[agent];
   
@@ -31,6 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ],
       max_tokens: 512,
     });
+    console.log({response: response.content});
     res.status(200).json({ response: response.content });
   } catch (err: any) {
     res.status(500).json({ error: `Task '${agent}' failed: ${err.message}` });
