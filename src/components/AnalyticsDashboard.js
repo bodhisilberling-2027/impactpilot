@@ -71,7 +71,7 @@ export default function AnalyticsDashboard() {
     setDuration(prev => ({ ...prev, [field]: Date.now() - startTime[field] }));
     setLoading(prev => ({ ...prev, [field]: false }));
 
-    const summaryText = data[outputKey].slice(0, 150) + '...';
+    const summaryText = (data[outputKey] || '').slice(0, 150) + '...';
     setSummaries(prev => ({ ...prev, [field]: summaryText }));
     setAgentUsage(prev => ({ ...prev, [field]: (prev[field] || 0) + 1 }));
   };
