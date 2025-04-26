@@ -1,24 +1,21 @@
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.API_KEY,
-});
-
-import { runAgent } from '../../lib/agent-engine';
+import { callClaude } from '../../utils/claude';
 
 export default async function handler(req, res) {
-  const { req_type, report } = JSON.parse(req.body);
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-  const instruction = `Evaluate this draft and suggest improvements for clarity, structure, metrics, tone, and persuasiveness:\n\n${report}`;
-
-  const response = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-latest',
-    messages: [
-      { role: 'user', content: instruction },
-    ],
-    max_tokens: 512,
-  });
-
-  res.status(200).json({ response : response.content });
-  const { res_type, text } = response.content[0];
+  try {
+    const { input, config } = req.body;
+    const systemPrompt = `You are a data reporting expert. Analyze and report on data with:
+- Report type: ${config?.reportType || 'analysis'}
+- Data format: ${config?.dataFormat || 'detailed'}
+- Style: ${config?.style || 'professional'}`;
+    
+    const response = await callClaude(input, systemPrompt);
+    res.status(200).json({ response });
+  } catch (error) {
+    console.error('Error generating report:', error);
+    res.status(500).json({ error: 'Failed to generate report' });
+  }
 }

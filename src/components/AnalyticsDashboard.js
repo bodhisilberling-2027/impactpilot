@@ -71,7 +71,7 @@ export default function AnalyticsDashboard() {
     setDuration(prev => ({ ...prev, [field]: Date.now() - startTime[field] }));
     setLoading(prev => ({ ...prev, [field]: false }));
 
-    const summaryText = data[outputKey].slice(0, 150) + '...';
+    const summaryText = (data[outputKey] || '').slice(0, 150) + '...';
     setSummaries(prev => ({ ...prev, [field]: summaryText }));
     setAgentUsage(prev => ({ ...prev, [field]: (prev[field] || 0) + 1 }));
   };
@@ -191,19 +191,19 @@ export default function AnalyticsDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {Object.entries(groupedAgents).map(([group, agentList]) => {
-          const filtered = agentList.filter(a => a.toLowerCase().includes(search));
+          const filtered = agentList.filter(agent => agent.id.toLowerCase().includes(search));
           if (!filtered.length) return null;
           return (
             <div key={group} className="bg-[#161616] border border-gray-700 p-4 rounded-xl">
               <h2 className="text-lg text-indigo-300 font-semibold mb-2">{group}</h2>
               <div className="flex flex-wrap gap-2">
-                {filtered.map(a => (
+                {filtered.map(agent => (
                   <button
-                    key={a}
-                    onClick={() => setTab(a)}
-                    className={`px-3 py-1.5 rounded-full text-sm ${tab === a ? 'bg-indigo-500 text-white' : 'bg-[#1f1f1f] text-gray-300 border border-gray-600 hover:bg-[#2a2a2a]'}`}
+                    key={agent.id}
+                    onClick={() => setTab(agent.id)}
+                    className={`px-3 py-1.5 rounded-full text-sm ${tab === agent.id ? 'bg-indigo-500 text-white' : 'bg-[#1f1f1f] text-gray-300 border border-gray-600 hover:bg-[#2a2a2a]'}`}
                   >
-                    {a} ({agentUsage[a] || 0})
+                    {agent.id} ({agentUsage[agent.id] || 0})
                   </button>
                 ))}
               </div>

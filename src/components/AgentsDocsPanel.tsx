@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from 'react';
 
+// Define valid agent types
+type AgentType = 'compose-email' | 'reporter' | 'summary' | 'volunteer-match';
+
+const VALID_AGENTS: AgentType[] = ['compose-email', 'reporter', 'summary', 'volunteer-match'];
+
 type AgentDoc = {
-  name: string;
+  name: AgentType;
   type: string;
   preview: string;
 };
@@ -20,7 +25,16 @@ export default function AgentDocsPanel() {
   useEffect(() => {
     fetch('/api/agents')
       .then(res => res.json())
-      .then((data: AgentDoc[]) => setDocs(data))
+      .then((data: AgentDoc[]) => {
+        console.log('API Response:', data);
+        // Filter to only show valid agents
+        const validDocs = data.filter(doc => {
+          console.log('Checking doc:', doc.name, 'Valid:', VALID_AGENTS.includes(doc.name as AgentType));
+          return VALID_AGENTS.includes(doc.name as AgentType);
+        });
+        console.log('Filtered Docs:', validDocs);
+        setDocs(validDocs);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -28,7 +42,7 @@ export default function AgentDocsPanel() {
     const params = new URLSearchParams(window.location.search);
     const agent = params.get('agent');
     const input = params.get('input');
-    if (agent && input) {
+    if (agent && input && VALID_AGENTS.includes(agent as AgentType)) {
       setInputs(prev => ({ ...prev, [agent]: input }));
       setExpanded(prev => ({ ...prev, [agent]: true }));
       setFilterType('');

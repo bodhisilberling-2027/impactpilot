@@ -1,5 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Define valid agent types
+type AgentType = 'compose-email' | 'reporter' | 'summary' | 'volunteer-match';
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -14,15 +17,19 @@ interface AgentConfig {
   tone?: string;
   style?: string;
   format?: string;
-  audience?: string;
   length?: 'short' | 'medium' | 'long';
-  complexity?: 'simple' | 'moderate' | 'technical';
   purpose?: string;
+  reportType?: string;
+  dataFormat?: string;
+  matchCriteria?: string[];
+  skillLevel?: string;
+  availability?: string;
+  interestAreas?: string[];
 }
 
 export async function saveFlow(
   name: string, 
-  steps: string[], 
+  steps: AgentType[], 
   notes: Record<string, string> = {},
   configs: Record<string, AgentConfig> = {}
 ) {
@@ -71,7 +78,7 @@ export async function getFlowById(id: string) {
   return data;
 }
 
-export async function updateFlow(id: string, updates: { name?: string; steps?: any[]; notes?: Record<string, any> }) {
+export async function updateFlow(id: string, updates: { name?: string; steps?: AgentType[]; notes?: Record<string, any> }) {
   const { error } = await supabase.from('agent_flows').update(updates).eq('id', id);
   if (error) throw new Error(error.message);
 }

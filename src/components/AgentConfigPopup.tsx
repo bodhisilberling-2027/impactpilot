@@ -2,6 +2,9 @@
 
 import React from 'react';
 
+// Define valid agent types
+type AgentType = 'compose-email' | 'reporter' | 'summary' | 'volunteer-match';
+
 interface AgentConfig {
   temperature?: number;
   maxTokens?: number;
@@ -11,29 +14,42 @@ interface AgentConfig {
   tone?: string;
   style?: string;
   format?: string;
-  audience?: string;
   length?: 'short' | 'medium' | 'long';
-  complexity?: 'simple' | 'moderate' | 'technical';
   purpose?: string;
+  reportType?: string;
+  dataFormat?: string;
+  matchCriteria?: string[];
+  skillLevel?: string;
+  availability?: string;
+  interestAreas?: string[];
 }
 
 interface AgentConfigPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  agentName: string;
+  agentName: AgentType;
   config: AgentConfig;
   onSave: (config: AgentConfig) => void;
 }
 
-const defaultConfigs: Record<string, AgentConfig> = {
-  faq: {
+const defaultConfigs: Record<AgentType, AgentConfig> = {
+  'compose-email': {
+    temperature: 0.9,
+    maxTokens: 1000,
+    systemPrompt: 'You are a professional email composer.',
+    model: 'claude-3-opus-20240229',
+    tone: 'professional',
+    purpose: 'connect',
+    style: 'formal',
+  },
+  reporter: {
     temperature: 0.7,
     maxTokens: 2000,
-    systemPrompt: 'You are a helpful FAQ generator.',
+    systemPrompt: 'You are an expert data reporter and analyzer.',
     model: 'claude-3-opus-20240229',
-    format: 'Q&A',
-    complexity: 'simple',
-    length: 'medium',
+    reportType: 'analysis',
+    dataFormat: 'detailed',
+    style: 'professional',
   },
   summary: {
     temperature: 0.5,
@@ -42,35 +58,25 @@ const defaultConfigs: Record<string, AgentConfig> = {
     model: 'claude-3-opus-20240229',
     style: 'concise',
     length: 'short',
-    complexity: 'moderate',
   },
-  explainer: {
+  'volunteer-match': {
     temperature: 0.8,
-    maxTokens: 2500,
-    systemPrompt: 'You are an expert at explaining complex topics.',
+    maxTokens: 2000,
+    systemPrompt: 'You are an expert volunteer matching assistant.',
     model: 'claude-3-opus-20240229',
-    complexity: 'technical',
-    length: 'long',
-    audience: 'general',
-  },
-  outreach: {
-    temperature: 0.9,
-    maxTokens: 1000,
-    systemPrompt: 'You are a professional outreach message composer.',
-    model: 'claude-3-opus-20240229',
-    tone: 'professional',
-    purpose: 'connect',
-    style: 'formal',
+    skillLevel: 'intermediate',
+    availability: 'flexible',
+    interestAreas: ['community', 'education'],
   },
 };
 
 const AgentSpecificFields = ({ agentName, config, onChange }: {
-  agentName: string;
+  agentName: AgentType;
   config: AgentConfig;
-  onChange: (field: string, value: string) => void;
+  onChange: (field: string, value: string | string[]) => void;
 }) => {
   switch (agentName) {
-    case 'outreach':
+    case 'compose-email':
       return (
         <>
           <div>
@@ -113,45 +119,47 @@ const AgentSpecificFields = ({ agentName, config, onChange }: {
             </select>
           </div>
         </>;
-      
-    case 'explainer':
+
+    case 'reporter':
       return (
         <>
           <div>
-            <label className="block text-sm text-gray-300 mb-1">Complexity</label>
+            <label className="block text-sm text-gray-300 mb-1">Report Type</label>
             <select
-              value={config.complexity || 'moderate'}
-              onChange={(e) => onChange('complexity', e.target.value)}
+              value={config.reportType || 'analysis'}
+              onChange={(e) => onChange('reportType', e.target.value)}
               className="w-full bg-[#333] border border-gray-600 rounded px-3 py-2"
             >
-              <option value="simple">Simple</option>
-              <option value="moderate">Moderate</option>
-              <option value="technical">Technical</option>
+              <option value="analysis">Analysis</option>
+              <option value="metrics">Metrics</option>
+              <option value="trends">Trends</option>
+              <option value="comparison">Comparison</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm text-gray-300 mb-1">Target Audience</label>
+            <label className="block text-sm text-gray-300 mb-1">Data Format</label>
             <select
-              value={config.audience || 'general'}
-              onChange={(e) => onChange('audience', e.target.value)}
+              value={config.dataFormat || 'detailed'}
+              onChange={(e) => onChange('dataFormat', e.target.value)}
               className="w-full bg-[#333] border border-gray-600 rounded px-3 py-2"
             >
-              <option value="general">General</option>
-              <option value="technical">Technical</option>
-              <option value="business">Business</option>
-              <option value="academic">Academic</option>
+              <option value="detailed">Detailed</option>
+              <option value="summary">Summary</option>
+              <option value="visual">Visual</option>
+              <option value="raw">Raw Data</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm text-gray-300 mb-1">Length</label>
+            <label className="block text-sm text-gray-300 mb-1">Style</label>
             <select
-              value={config.length || 'medium'}
-              onChange={(e) => onChange('length', e.target.value)}
+              value={config.style || 'professional'}
+              onChange={(e) => onChange('style', e.target.value)}
               className="w-full bg-[#333] border border-gray-600 rounded px-3 py-2"
             >
-              <option value="short">Short</option>
-              <option value="medium">Medium</option>
-              <option value="long">Long</option>
+              <option value="professional">Professional</option>
+              <option value="technical">Technical</option>
+              <option value="executive">Executive</option>
+              <option value="simplified">Simplified</option>
             </select>
           </div>
         </>;
@@ -186,31 +194,52 @@ const AgentSpecificFields = ({ agentName, config, onChange }: {
           </div>
         </>;
 
-    case 'faq':
+    case 'volunteer-match':
       return (
         <>
           <div>
-            <label className="block text-sm text-gray-300 mb-1">Format</label>
+            <label className="block text-sm text-gray-300 mb-1">Skill Level</label>
             <select
-              value={config.format || 'Q&A'}
-              onChange={(e) => onChange('format', e.target.value)}
+              value={config.skillLevel || 'intermediate'}
+              onChange={(e) => onChange('skillLevel', e.target.value)}
               className="w-full bg-[#333] border border-gray-600 rounded px-3 py-2"
             >
-              <option value="Q&A">Q&A</option>
-              <option value="conversational">Conversational</option>
-              <option value="structured">Structured</option>
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+              <option value="expert">Expert</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm text-gray-300 mb-1">Complexity</label>
+            <label className="block text-sm text-gray-300 mb-1">Availability</label>
             <select
-              value={config.complexity || 'simple'}
-              onChange={(e) => onChange('complexity', e.target.value)}
+              value={config.availability || 'flexible'}
+              onChange={(e) => onChange('availability', e.target.value)}
               className="w-full bg-[#333] border border-gray-600 rounded px-3 py-2"
             >
-              <option value="simple">Simple</option>
-              <option value="moderate">Moderate</option>
-              <option value="technical">Technical</option>
+              <option value="flexible">Flexible</option>
+              <option value="weekends">Weekends</option>
+              <option value="evenings">Evenings</option>
+              <option value="full-time">Full Time</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-300 mb-1">Interest Areas</label>
+            <select
+              multiple
+              value={config.interestAreas || ['community', 'education']}
+              onChange={(e) => {
+                const selected = Array.from(e.target.selectedOptions, option => option.value);
+                onChange('interestAreas', selected);
+              }}
+              className="w-full bg-[#333] border border-gray-600 rounded px-3 py-2"
+            >
+              <option value="community">Community</option>
+              <option value="education">Education</option>
+              <option value="environment">Environment</option>
+              <option value="health">Health</option>
+              <option value="arts">Arts</option>
+              <option value="technology">Technology</option>
             </select>
           </div>
         </>;
@@ -236,7 +265,7 @@ export default function AgentConfigPopup({ isOpen, onClose, agentName, config, o
     onClose();
   };
 
-  const handleFieldChange = (field: string, value: string) => {
+  const handleFieldChange = (field: string, value: string | string[]) => {
     setLocalConfig(prev => ({ ...prev, [field]: value }));
   };
 

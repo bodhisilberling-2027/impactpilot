@@ -7,17 +7,33 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import AgentConfigPopup from './AgentConfigPopup';
 
+// Define valid agent types
+type AgentType = 'compose-email' | 'reporter' | 'summary' | 'volunteer-match';
+
+const VALID_AGENTS: AgentType[] = ['compose-email', 'reporter', 'summary', 'volunteer-match'];
+
 interface AgentConfig {
   temperature?: number;
   maxTokens?: number;
   systemPrompt?: string;
   model?: string;
+  tone?: string;
+  style?: string;
+  format?: string;
+  length?: 'short' | 'medium' | 'long';
+  purpose?: string;
+  reportType?: string;
+  dataFormat?: string;
+  matchCriteria?: string[];
+  skillLevel?: string;
+  availability?: string;
+  interestAreas?: string[];
 }
 
 interface FlowRecord {
   id: string;
   name: string;
-  steps: string[];
+  steps: AgentType[];
   notes: Record<string, string>;
   configs?: Record<string, AgentConfig>;
   createdAt?: string;
@@ -28,7 +44,7 @@ interface FlowRecord {
 
 function SortableItem({ id, step, index, onRemove, note, onNoteChange }: {
   id: string;
-  step: string;
+  step: AgentType;
   index: number;
   onRemove: (index: number) => void;
   note: string;
@@ -37,9 +53,14 @@ function SortableItem({ id, step, index, onRemove, note, onNoteChange }: {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
+  // Format the agent name for display
+  const formatAgentName = (name: string) => {
+    return name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  };
+
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="bg-indigo-600 px-3 py-2 rounded relative">
-      <span className="text-white text-xs">{step}</span>
+      <span className="text-white text-xs">{formatAgentName(step)}</span>
       <textarea
         rows={2}
         value={note || ''}
@@ -56,7 +77,7 @@ function SortableItem({ id, step, index, onRemove, note, onNoteChange }: {
 }
 
 export default function AgentFlowCanvas() {
-  const [flow, setFlow] = useState<string[]>([]);
+  const [flow, setFlow] = useState<AgentType[]>([]);
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [stepOutputs, setStepOutputs] = useState<Record<string, string>>({});
@@ -65,22 +86,34 @@ export default function AgentFlowCanvas() {
   const [name, setName] = useState('');
   const [memoryEnabled, setMemoryEnabled] = useState(true);
   const [configPopupOpen, setConfigPopupOpen] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<string>('');
+  const [selectedAgent, setSelectedAgent] = useState<AgentType>('compose-email');
   const [agentConfigs, setAgentConfigs] = useState<Record<string, AgentConfig>>({});
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const preflow = params.get('flow');
     const preinput = params.get('input');
-    if (preflow) setFlow(preflow.split(','));
+    if (preflow) {
+      // Only set valid agents from the URL
+      const validAgents = preflow.split(',').filter(agent => VALID_AGENTS.includes(agent as AgentType)) as AgentType[];
+      setFlow(validAgents);
+    }
     if (preinput) setInput(preinput);
-    loadFlows().then(setSaved);
+    loadFlows().then(flows => {
+      // Filter out any saved flows that contain invalid agents
+      const validFlows = flows.map(flow => ({
+        ...flow,
+        steps: flow.steps.filter(step => VALID_AGENTS.includes(step as AgentType))
+      }));
+      setSaved(validFlows);
+    });
   }, []);
 
   const handleRun = async () => {
     let value = input;
     const results: Record<string, string> = {};
     for (const agent of flow) {
+      if (!VALID_AGENTS.includes(agent)) continue; // Skip invalid agents
       const res = await fetch(`/api/${agent}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -99,20 +132,26 @@ export default function AgentFlowCanvas() {
   };
 
   const handleSave = async () => {
-    await saveFlow(name, flow, noteMap, agentConfigs);
+    // Filter out any invalid agents before saving
+    const validFlow = flow.filter(agent => VALID_AGENTS.includes(agent));
+    await saveFlow(name, validFlow, noteMap, agentConfigs);
     const updated = await loadFlows();
     setSaved(updated);
     setName('');
   };
 
   const forkFlow = (f: FlowRecord) => {
-    setFlow(f.steps);
+    // Filter out any invalid agents when forking
+    const validSteps = f.steps.filter(step => VALID_AGENTS.includes(step as AgentType)) as AgentType[];
+    setFlow(validSteps);
     setNoteMap(f.notes || {});
     setName(`${f.name} (Fork)`);
   };
 
   const generateLink = () => {
-    const query = new URLSearchParams({ flow: flow.join(','), input });
+    // Only include valid agents in the link
+    const validFlow = flow.filter(agent => VALID_AGENTS.includes(agent));
+    const query = new URLSearchParams({ flow: validFlow.join(','), input });
     navigator.clipboard.writeText(`${window.location.origin}/flow?${query.toString()}`);
   };
 
@@ -121,12 +160,12 @@ export default function AgentFlowCanvas() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        prompt: `Given the goal: "${input}", suggest a 2–4 step chain of agents using only their names.`
+        prompt: `Given the goal: "${input}", suggest a 2–4 step chain of agents using only: compose-email, reporter, summary, volunteer-match.`
       })
     });
     const { response } = await res.json();
-    const chain = response.match(/\b[a-zA-Z\-]+\b/g)?.filter((w: string) => ['faq', 'summary', 'explainer', 'outreach'].includes(w));
-    if (chain?.length) setFlow(chain);
+    const chain = response.match(/\b[a-zA-Z\-]+\b/g)?.filter((w: string) => VALID_AGENTS.includes(w as AgentType));
+    if (chain?.length) setFlow(chain as AgentType[]);
   };
 
   const onDragEnd = (event: DragEndEvent) => {
@@ -142,7 +181,7 @@ export default function AgentFlowCanvas() {
     setNoteMap(prev => ({ ...prev, [id]: val }));
   };
 
-  const openConfig = (agent: string) => {
+  const openConfig = (agent: AgentType) => {
     setSelectedAgent(agent);
     setConfigPopupOpen(true);
   };
@@ -152,6 +191,11 @@ export default function AgentFlowCanvas() {
       ...prev,
       [selectedAgent]: config
     }));
+  };
+
+  // Format agent name for display
+  const formatAgentName = (name: string) => {
+    return name.split('-').map((step: string) => step.charAt(0).toUpperCase() + step.slice(1)).join(' ');
   };
 
   return (
@@ -167,8 +211,14 @@ export default function AgentFlowCanvas() {
       />
 
       <div className="flex gap-2 items-center mb-4">
-        {['faq', 'summary', 'explainer', 'outreach'].map(a => (
-          <button key={a} onClick={() => setFlow(prev => [...prev, a])} className="px-3 py-1 bg-gray-700 rounded hover:bg-indigo-500">{a}</button>
+        {VALID_AGENTS.map(agent => (
+          <button 
+            key={agent} 
+            onClick={() => setFlow(prev => [...prev, agent])} 
+            className="px-3 py-1 bg-gray-700 rounded hover:bg-indigo-500"
+          >
+            {formatAgentName(agent)}
+          </button>
         ))}
         <label className="ml-auto text-xs flex items-center gap-2">
           <input type="checkbox" checked={memoryEnabled} onChange={() => setMemoryEnabled(!memoryEnabled)} /> Memory
@@ -222,10 +272,10 @@ export default function AgentFlowCanvas() {
           {saved.map(f => (
             <div key={f.id} className="bg-[#222] p-3 rounded border border-gray-700">
               <div className="text-sm font-bold text-white">{f.name} {f.version ? `(v${f.version})` : ''}</div>
-              <div className="text-xs text-gray-400">{f.steps.join(' → ')}</div>
+              <div className="text-xs text-gray-400">{f.steps.map(formatAgentName).join(' → ')}</div>
               <div className="text-xs text-gray-500 mt-1">🧠 Memory: {f.memoryEnabled ? 'on' : 'off'} | 📝 Notes: {Object.keys(f.notes || {}).length}</div>
               <div className="flex gap-2 mt-2">
-                <button onClick={() => setFlow(f.steps)} className="text-xs bg-green-700 px-2 py-1 rounded">Load</button>
+                <button onClick={() => setFlow(f.steps as AgentType[])} className="text-xs bg-green-700 px-2 py-1 rounded">Load</button>
                 <button onClick={() => forkFlow(f)} className="text-xs bg-purple-700 px-2 py-1 rounded">Fork</button>
                 <button onClick={() => deleteFlow(f.id).then(() => loadFlows().then(setSaved))} className="text-xs bg-red-700 px-2 py-1 rounded">Delete</button>
               </div>
