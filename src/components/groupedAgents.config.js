@@ -1,6 +1,7 @@
 const groupedAgents = {
   Communication: [{
     id: 'compose-email',
+    displayName: 'Compose Email',
     defaultConfig: {
       temperature: 0.7,
       maxTokens: 2000,
@@ -10,6 +11,7 @@ const groupedAgents = {
   }],
   Research: [{
     id: 'reporter',
+    displayName: 'Reporter',
     defaultConfig: {
       temperature: 0.3,
       maxTokens: 4000,
@@ -18,6 +20,7 @@ const groupedAgents = {
     }
   }, {
     id: 'summary',
+    displayName: 'Summary',
     defaultConfig: {
       temperature: 0.4,
       maxTokens: 1500,
@@ -27,6 +30,7 @@ const groupedAgents = {
   }],
   User: [{
     id: 'volunteer-match',
+    displayName: 'Volunteer Match',
     defaultConfig: {
       temperature: 0.6,
       maxTokens: 2000,
