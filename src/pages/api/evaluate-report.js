@@ -1,21 +1,18 @@
-import { runAgent } from '../../lib/agent-engine';
-
-import { OpenAI } from 'openai';
-
-const openai = new OpenAI({ apiKey: process.env.API_KEY });
+import { callClaude } from '../../utils/claude';
 
 export default async function handler(req, res) {
-  const { draft } = req.body;
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-  const prompt = `You are an expert in nonprofit impact reporting. Evaluate this draft and suggest improvements for clarity, structure, metrics, tone, and persuasiveness:\n\n${draft}`;
-
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
-    messages: [
-      { role: 'system', content: 'You help nonprofits write better impact reports.' },
-      { role: 'user', content: prompt }
-    ]
-  });
-
-  res.status(200).json({ feedback: completion.choices[0].message.content });
+  try {
+    const { report } = req.body;
+    const systemPrompt = 'You are an evaluation expert. Analyze reports and provide detailed feedback on content, structure, and recommendations for improvement.';
+    
+    const response = await callClaude(report, systemPrompt);
+    res.status(200).json({ evaluation: response });
+  } catch (error) {
+    console.error('Error evaluating report:', error);
+    res.status(500).json({ error: 'Failed to evaluate report' });
+  }
 }

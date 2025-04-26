@@ -1,10 +1,18 @@
-import { runAgent } from '../../lib/agent-engine';
+import { callClaude } from '../../utils/claude';
 
-export default function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).end();
-  
-    const { input } = req.body;
-    const draft = `Hi there,\n\nI'm reaching out because ${input.slice(0, 70)}...\nLet’s chat!`;
-  
-    res.status(200).json({ draft });
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  try {
+    const { input } = req.body;
+    const systemPrompt = 'You are an outreach expert. Create engaging, personalized outreach messages that are compelling and likely to get a response.';
+    
+    const response = await callClaude(input, systemPrompt);
+    res.status(200).json({ draft: response });
+  } catch (error) {
+    console.error('Error generating outreach message:', error);
+    res.status(500).json({ error: 'Failed to generate outreach message' });
+  }
+}

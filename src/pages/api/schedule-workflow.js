@@ -1,21 +1,18 @@
-import { runAgent } from '../../lib/agent-engine';
-
-import { OpenAI } from 'openai';
-
-const openai = new OpenAI({ apiKey: process.env.API_KEY });
+import { callClaude } from '../../utils/claude';
 
 export default async function handler(req, res) {
-  const { task, deadline } = req.body;
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-  const prompt = `Given the task "${task}", break it down into steps and assign estimated dates based on this final deadline: ${deadline}.`;
-
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
-    messages: [
-      { role: 'system', content: "You are a scheduling assistant that breaks tasks into steps and distributes them across a timeline." },
-      { role: 'user', content: prompt }
-    ]
-  });
-
-  res.status(200).json({ plan: completion.choices[0].message.content });
+  try {
+    const { workflow } = req.body;
+    const systemPrompt = 'You are a workflow scheduling expert. Analyze tasks and create optimized schedules with realistic timelines and dependencies.';
+    
+    const response = await callClaude(workflow, systemPrompt);
+    res.status(200).json({ schedule: response });
+  } catch (error) {
+    console.error('Error scheduling workflow:', error);
+    res.status(500).json({ error: 'Failed to schedule workflow' });
+  }
 }
