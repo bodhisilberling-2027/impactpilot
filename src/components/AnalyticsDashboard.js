@@ -29,12 +29,11 @@ export default function AnalyticsDashboard() {
   const [notes, setNotes] = useState({});
   const dashboardRef = useRef(null);
 
-  // const [inputs, setInputs] = useState(() => JSON.parse(localStorage.getItem('impactpilot-inputs') || '{}'));
-  // const [outputs, setOutputs] = useState(() => JSON.parse(localStorage.getItem('impactpilot-outputs') || '{}'));
-  const [inputs, setInputs] = useState(() => JSON.parse('{}'));
-  const [outputs, setOutputs] = useState(() => JSON.parse('{}'));
+  const [inputs, setInputs] = useState(() => JSON.parse(localStorage.getItem('impactpilot-inputs') || '{}'));
+  const [outputs, setOutputs] = useState(() => JSON.parse(localStorage.getItem('impactpilot-outputs') || '{}'));
+  // const [inputs, setInputs] = useState(() => JSON.parse('{}'));
+  // const [outputs, setOutputs] = useState(() => JSON.parse('{}'));
   const [autoRun, setAutoRun] = useState(true);
-  const [startTime, setStartTime] = useState({});
   const [duration, setDuration] = useState({});
   const [history, setHistory] = useState([]);
   const [undoStack, setUndoStack] = useState([]);
@@ -53,7 +52,7 @@ export default function AnalyticsDashboard() {
     setRedoStack([]);
     const updated = { ...inputs, [id]: value };
     setInputs(updated);
-    if (autoRun && id in outputs) handleAgent(`/api/${id}`, id);
+    // if (autoRun && id in outputs) handleAgent(`/api/${id}`, id);
   };
 
   const handleAgent = async (url, field, inputKey = 'input', outputKey = 'response') => {
@@ -63,16 +62,12 @@ export default function AnalyticsDashboard() {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: field , [field]: inputs[field] })
+      body: JSON.stringify({ type: field , [field]: inputs[field], context: history })
     });
     const data = await res.json();
     const timestamp = new Date().toLocaleString();
     setOutputs(prev => ({ ...prev, [field]: data[outputKey] }));
-    // const nextAgent = agentChains[field];
-    // if (nextAgent) {
-    //   setInputs(prev => ({ ...prev, [nextAgent]: data[outputKey] }));
-    // }
-    setHistory(prev => [{ id: field, timestamp, output: data[outputKey] }, ...prev.slice(0, 15)]);
+    setHistory(prev => [{ id: field, timestamp, input: inputs[field], output: data[outputKey] }, ...prev.slice(0, 10)]);
     setDuration(prev => ({ ...prev, [field]: Date.now() - start }));
     setLoading(prev => ({ ...prev, [field]: false }));
 
@@ -81,12 +76,6 @@ export default function AnalyticsDashboard() {
     setAgentUsage(prev => ({ ...prev, [field]: (prev[field] || 0) + 1 }));
   };
 
-  const agentChains = {
-    meeting: 'notetaker',
-    notetaker: 'action-items',
-    persona: 'outreach',
-    questioner: 'explainer'
-  };
   const exportPDF = async () => {
     const canvas = await html2canvas(dashboardRef.current);
     const imgData = canvas.toDataURL('image/png');
@@ -104,47 +93,47 @@ export default function AnalyticsDashboard() {
     a.click();
   };
 
-  const onDrop = useDropzone({
-    accept: '.csv, .pdf, .json',
-    onDrop: (acceptedFiles) => {
-      acceptedFiles.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          if (file.name.endsWith('.csv')) {
-            const parsed = parse(reader.result, { header: true });
-            setInputs(prev => ({ ...prev, csv: JSON.stringify(parsed.data.slice(0, 5)) }));
-          } else if (file.name.endsWith('.json')) {
-            try {
-              const json = JSON.parse(reader.result);
-              setInputs(prev => ({ ...prev, json: JSON.stringify(json) }));
-            } catch {
-              alert('Invalid JSON file');
-            }
-          } else if (file.name.endsWith('.pdf')) {
-            setInputs(prev => ({ ...prev, summary: `PDF Uploaded: ${file.name}` }));
-          }
-        };
-        reader.readAsText(file);
-      });
-    }
-  });
+  // const onDrop = useDropzone({
+  //   accept: '.csv, .pdf, .json',
+  //   onDrop: (acceptedFiles) => {
+  //     acceptedFiles.forEach(file => {
+  //       const reader = new FileReader();
+  //       reader.onload = () => {
+  //         if (file.name.endsWith('.csv')) {
+  //           const parsed = parse(reader.result, { header: true });
+  //           setInputs(prev => ({ ...prev, csv: JSON.stringify(parsed.data.slice(0, 5)) }));
+  //         } else if (file.name.endsWith('.json')) {
+  //           try {
+  //             const json = JSON.parse(reader.result);
+  //             setInputs(prev => ({ ...prev, json: JSON.stringify(json) }));
+  //           } catch {
+  //             alert('Invalid JSON file');
+  //           }
+  //         } else if (file.name.endsWith('.pdf')) {
+  //           setInputs(prev => ({ ...prev, summary: `PDF Uploaded: ${file.name}` }));
+  //         }
+  //       };
+  //       reader.readAsText(file);
+  //     });
+  //   }
+  // });
 
-  const loadWorkspace = (e) => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const { inputs: inData, outputs: outData, history: hist, notes: savedNotes } = JSON.parse(reader.result);
-        setInputs(inData || {});
-        setOutputs(outData || {});
-        setHistory(hist || []);
-        setNotes(savedNotes || {});
-      } catch {
-        alert('Invalid workspace');
-      }
-    };
-    reader.readAsText(file);
-  };
+  // const loadWorkspace = (e) => {
+  //   const file = e.target.files[0];
+  //   const reader = new FileReader();
+  //   reader.onload = () => {
+  //     try {
+  //       const { inputs: inData, outputs: outData, history: hist, notes: savedNotes } = JSON.parse(reader.result);
+  //       setInputs(inData || {});
+  //       setOutputs(outData || {});
+  //       setHistory(hist || []);
+  //       setNotes(savedNotes || {});
+  //     } catch {
+  //       alert('Invalid workspace');
+  //     }
+  //   };
+  //   reader.readAsText(file);
+  // };
 
   const exportHistory = (format = 'json') => {
     const content = format === 'csv'
