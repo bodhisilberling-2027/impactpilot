@@ -1,18 +1,27 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import Anthropic from '@anthropic-ai/sdk';
 import { prompts } from './prompt';
-import { json } from 'stream/consumers';
+import type { ContentBlock, TextBlock } from '@anthropic-ai/sdk/resources/messages';
 
 const anthropic = new Anthropic({
   apiKey: process.env.API_KEY,
 });
+
+function isTextBlock(block: ContentBlock): block is TextBlock {
+  return block.type === 'text';
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Only POST method allowed' });
   }
 
-  const body = JSON.parse(req.body);
+  let body;
+  if (typeof req.body === 'string') {
+    body = JSON.parse(req.body);
+  } else {
+    body = req.body;
+  }
   const { type: agent } = body;
   const input = body[agent];
   
@@ -31,7 +40,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ],
       max_tokens: 512,
     });
-    res.status(200).json({ response: response.content });
+    console.log(response);
+
+    const blocks: ContentBlock[] = response.content;
+    const fullText = blocks
+      .filter(isTextBlock)
+      .map(b => b.text)
+      .join('');
+    console.log(fullText);
+
+    res.status(200).json({ response: fullText });
   } catch (err: any) {
     res.status(500).json({ error: `Task '${agent}' failed: ${err.message}` });
   }

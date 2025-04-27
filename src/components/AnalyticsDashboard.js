@@ -29,8 +29,10 @@ export default function AnalyticsDashboard() {
   const [notes, setNotes] = useState({});
   const dashboardRef = useRef(null);
 
-  const [inputs, setInputs] = useState(() => JSON.parse(localStorage.getItem('impactpilot-inputs') || '{}'));
-  const [outputs, setOutputs] = useState(() => JSON.parse(localStorage.getItem('impactpilot-outputs') || '{}'));
+  // const [inputs, setInputs] = useState(() => JSON.parse(localStorage.getItem('impactpilot-inputs') || '{}'));
+  // const [outputs, setOutputs] = useState(() => JSON.parse(localStorage.getItem('impactpilot-outputs') || '{}'));
+  const [inputs, setInputs] = useState(() => JSON.parse('{}'));
+  const [outputs, setOutputs] = useState(() => JSON.parse('{}'));
   const [autoRun, setAutoRun] = useState(true);
   const [startTime, setStartTime] = useState({});
   const [duration, setDuration] = useState({});
@@ -55,22 +57,23 @@ export default function AnalyticsDashboard() {
   };
 
   const handleAgent = async (url, field, inputKey = 'input', outputKey = 'response') => {
-    setStartTime(prev => ({ ...prev, [field]: Date.now() }));
+    // setStartTime(prev => ({ ...prev, [field]: Date.now() }));
+    const start = Date.now();
     setLoading(prev => ({ ...prev, [field]: true }));
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ [inputKey]: inputs[field] })
+      body: JSON.stringify({ type: field , [field]: inputs[field] })
     });
     const data = await res.json();
     const timestamp = new Date().toLocaleString();
     setOutputs(prev => ({ ...prev, [field]: data[outputKey] }));
-    const nextAgent = agentChains[field];
-    if (nextAgent) {
-      setInputs(prev => ({ ...prev, [nextAgent]: data[outputKey] }));
-    }
+    // const nextAgent = agentChains[field];
+    // if (nextAgent) {
+    //   setInputs(prev => ({ ...prev, [nextAgent]: data[outputKey] }));
+    // }
     setHistory(prev => [{ id: field, timestamp, output: data[outputKey] }, ...prev.slice(0, 15)]);
-    setDuration(prev => ({ ...prev, [field]: Date.now() - startTime[field] }));
+    setDuration(prev => ({ ...prev, [field]: Date.now() - start }));
     setLoading(prev => ({ ...prev, [field]: false }));
 
     const summaryText = (data[outputKey] || '').slice(0, 150) + '...';
@@ -229,7 +232,7 @@ export default function AnalyticsDashboard() {
         {tab && tab !== 'dashboard' && (
           <AgentPanel
             id={tab}
-            api={`/api/${tab}`}
+            api={`/api/agent`}
             input={inputs[tab] || ''}
             output={outputs[tab] || ''}
             loading={loading[tab]}
