@@ -22,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } else {
     body = req.body;
   }
-  const { type: agent } = body;
+  const { type: agent, context } = body;
   const input = body[agent];
   
   let prompt;
@@ -32,11 +32,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(500).json({ error: `Task '${agent}' does not exist: ${err.message}`});
   }
 
+  let history = context
+    .map(c => JSON.stringify(c))
+    .join('');
+
+  let claude_prompt = `${prompt}
+  
+  The user may or may not refer to previous chats' content.
+  Use your own judgement to determine if the user's messages reference any previous content, and respond appropriately.
+  Here are the last one or more chats:
+
+  ${history}
+
+  Finally, here is the user input you must respond to:
+  ${input}.
+  `;
+  console.log(claude_prompt);
+
   try {
     const response = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-latest',
       messages: [
-        { role: 'user', content: `${prompt}\n\nHere is the user input: ${input}` },
+        { role: 'user', content: claude_prompt },
       ],
       max_tokens: 512,
     });
