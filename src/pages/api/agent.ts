@@ -24,6 +24,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   const { type: agent, context } = body;
   const input = body[agent];
+
+  let extra;
+  if ('extra' in body) {
+    extra = body['extra'];
+  }
   
   let prompt;
   try {
@@ -45,9 +50,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   ${history}
 
   Finally, here is the user input you must respond to:
-  ${input}.
-  `;
-  console.log(claude_prompt);
+  ${input}.`;
+  if (extra) {
+    claude_prompt = `${prompt}
+    
+    The user may or may not refer to previous chats' content.
+    Use your own judgement to determine if the user's messages reference any previous content, and respond appropriately.
+    Here are the last one or more chats:
+
+    ${history}
+
+    Here is the list of volunteers to select from:
+    ${extra}
+
+    Finally, here is the user input you must respond to:
+    ${input}.`;
+  }
+  console.log(body);
 
   try {
     const response = await anthropic.messages.create({

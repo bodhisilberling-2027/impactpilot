@@ -55,14 +55,41 @@ export default function AnalyticsDashboard() {
     // if (autoRun && id in outputs) handleAgent(`/api/${id}`, id);
   };
 
+  // function parseCSV(text) {
+  //   const rows = [];
+  //   const lines = text.trim().split('\n');
+  //   const headers = lines.shift().match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+  //   for (let line of lines) {
+  //     const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)
+  //       .map(s => s.replace(/^"|"$/g, '')); // strip quotes
+  //     const obj = {};
+  //     headers.forEach((h, i) => {
+  //       obj[h.replace(/^"|"$/g, '')] = values[i];
+  //     });
+  //     rows.push(obj);
+  //   }
+  //   return rows;
+  // }
+
   const handleAgent = async (url, field, inputKey = 'input', outputKey = 'response') => {
     // setStartTime(prev => ({ ...prev, [field]: Date.now() }));
     const start = Date.now();
     setLoading(prev => ({ ...prev, [field]: true }));
+
+    let extra;
+    if (field === 'volunteer-match') {
+      const tmp = await fetch('/api/csv', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      extra = await tmp.json();
+      extra = extra['csv'];
+    }
+    
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: field , [field]: inputs[field], context: history })
+      body: JSON.stringify(extra ? { type: field , [field]: inputs[field], context: history, extra: extra } : { type: field , [field]: inputs[field], context: history })
     });
     const data = await res.json();
     const timestamp = new Date().toLocaleString();
