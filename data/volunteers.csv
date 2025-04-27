@@ -1,3 +1,8 @@
 name,email,location,interests,createdAt,status
 "hi","lwang07@berkeley.edu","hi","hi","2025-04-26T23:05:52.454Z","pending"
-"Lawrence Wang","lwang07@berkeley.edu","Berkeley CA","mice","2025-04-26T23:18:07.577Z","pending"
+"Lawrence Wang1","lwang07@berkeley.edu","Berkeley CA","swimming","2025-04-26T23:18:07.577Z","pending"
+"Lawrence Wang2","lwang07@berkeley.edu","Berkeley CA","water","2025-04-26T23:18:07.577Z","pending"
+"Lawrence Wang3","lwang07@berkeley.edu","Berkeley CA","boats","2025-04-26T23:18:07.577Z","pending"
+"Lawrence Wang4","lwang07@berkeley.edu","Berkeley CA","ocean pollution","2025-04-26T23:18:07.577Z","pending"
+"Lawrence Wang5","lwang07@berkeley.edu","Berkeley CA","sea critters","2025-04-26T23:18:07.577Z","pending"
+"Lawrence Wang6","lwang07@berkeley.edu","Berkeley CA","mice","2025-04-26T23:18:07.577Z","pending"
